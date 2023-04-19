@@ -901,6 +901,7 @@ fn extract_interoperation_tx_sender(
     }
 
     // Verify by CKB-VM mode
+    let now = std::time::Instant::now();
     let r = SignatureR::decode(&signature.r).map_err(|e| Error::Custom(e.to_string()))?;
     let s = SignatureS::decode(&signature.s).map_err(|e| Error::Custom(e.to_string()))?;
     let address_source = r.address_source();
@@ -933,6 +934,7 @@ fn extract_interoperation_tx_sender(
                 cell.type_script_hash().unwrap()
             };
 
+            log::error!("extract signature cost {:?}us", now.elapsed().as_micros());
             return Ok(Hasher::digest(script_hash).into());
         }
 
@@ -950,6 +952,7 @@ fn extract_interoperation_tx_sender(
                 return Err(Error::Custom("Invalid address source".to_string()));
             };
 
+            log::error!("extract signature cost {:?}us", now.elapsed().as_micros());
             Ok(Hasher::digest(script_hash).into())
         }
         _ => Err(Error::Custom("Cannot find input cell in ICSC".to_string())),

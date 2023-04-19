@@ -275,6 +275,7 @@ where
     }
 
     fn verify_signature(&self, stx: &SignedTransaction) -> ProtocolResult<()> {
+        let now = std::time::Instant::now();
         let signature = stx.transaction.signature.clone().unwrap();
         if signature.is_eth_sig() {
             // Verify secp256k1 signature
@@ -330,6 +331,9 @@ where
                 .map_err(|e| AdapterError::VerifySignature(e.to_string()))?;
             }
         }
+
+        log::error!("verify signature cost {:?}us", now.elapsed().as_micros());
+
         Ok(())
     }
 }
@@ -393,6 +397,8 @@ where
             return self.check_system_script_tx_authorization(ctx, tx).await;
         }
 
+        let now = std::time::Instant::now();
+
         let addr = &tx.sender;
         if let Some(res) = self.addr_nonce.get(addr) {
             if tx.transaction.unsigned.nonce() < &res.value().0 {
@@ -440,6 +446,11 @@ where
             }
             .into());
         }
+
+        log::error!(
+            "check nonce and balance cost {:?}us",
+            now.elapsed().as_micros()
+        );
 
         Ok(tx.transaction.unsigned.nonce() - account.nonce)
     }

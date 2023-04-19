@@ -86,9 +86,14 @@ impl Interoperation for InteroperationImpl {
         let rtx = resolve_transaction(data_loader, mocked_tx, dummy_input)?;
         log::debug!("[mempool]: Verify by ckb vm tx {:?}", rtx);
 
-        TransactionScriptsVerifier::new(&rtx, data_loader)
+        let now = std::time::Instant::now();
+        let res = TransactionScriptsVerifier::new(&rtx, data_loader)
             .verify(max_cycles)
-            .map_err(|e| InteroperationError::Ckb(e).into())
+            .map_err(|e| InteroperationError::Ckb(e).into());
+
+        log::error!("verify by ckb vm cost {:?}us", now.elapsed().as_micros());
+
+        res
     }
 }
 

@@ -11,6 +11,7 @@ pub fn resolve_transaction<CL: CellProvider>(
     tx: &TransactionView,
     dummy_input: Option<CellWithData>,
 ) -> ProtocolResult<ResolvedTransaction> {
+    let now = std::time::Instant::now();
     let resolve_cell = |out_point: &packed::OutPoint| -> ProtocolResult<CellMeta> {
         match cell_loader.cell(out_point, true) {
             CellStatus::Live(meta) => Ok(meta),
@@ -51,6 +52,8 @@ pub fn resolve_transaction<CL: CellProvider>(
             resolved_cell_deps.push(resolve_cell(&cell_dep.out_point())?);
         }
     }
+
+    log::error!("resolve ckb tx cost {:?}us", now.elapsed().as_micros());
 
     Ok(ResolvedTransaction {
         transaction: tx.clone(),
