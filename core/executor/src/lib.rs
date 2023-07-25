@@ -73,7 +73,7 @@ impl Executor for AxonExecutor {
         value: U256,
         data: Vec<u8>,
     ) -> TxResp {
-        let config = Config::london();
+        let config = self.config();
         let metadata = StackSubstateMetadata::new(gas_limit, &config);
         let state = MemoryStackState::new(metadata, backend);
         let precompiles = build_precompile_set();
@@ -138,7 +138,7 @@ impl Executor for AxonExecutor {
         let mut hashes = Vec::with_capacity(txs_len);
         let (mut gas, mut fee) = (0u64, U256::zero());
         let precompiles = build_precompile_set();
-        let config = Config::london();
+        let config = self.config();
 
         self.init_local_system_contract_roots(adapter);
 
@@ -324,6 +324,12 @@ impl AxonExecutor {
         CURRENT_METADATA_ROOT.with(|root| {
             *root.borrow_mut() = adapter.storage(METADATA_CONTRACT_ADDRESS, *METADATA_ROOT_KEY);
         });
+    }
+
+    fn config(&self) -> Config {
+        let mut config = Config::london();
+        config.create_contract_limit = Some(0xc000);
+        config
     }
 
     #[cfg(test)]
