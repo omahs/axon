@@ -32,6 +32,7 @@ use protocol::traits::{
     Consensus, Context, Executor, Gossip, MemPool, Network, NodeInfo, PeerTrust, ReadOnlyStorage,
     Rpc, Storage, SynchronizationAdapter,
 };
+use protocol::trie::Trie;
 use protocol::types::{
     Account, Address, Block, ExecResp, MerkleRoot, Metadata, Proposal, RichBlock,
     SignedTransaction, Validator, ValidatorExtend, H256, NIL_DATA, RLP_NULL,
@@ -987,10 +988,10 @@ where
     }
 }
 
-fn insert_accounts(
-    mpt: &mut MPTTrie<RocksTrieDB>,
-    accounts: &[InitialAccount],
-) -> ProtocolResult<()> {
+fn insert_accounts<DB>(mpt: &mut MPTTrie<DB>, accounts: &[InitialAccount]) -> ProtocolResult<()>
+where
+    DB: TrieDB,
+{
     for account in accounts {
         let raw_account = Account {
             nonce:        0u64.into(),
@@ -999,7 +1000,7 @@ fn insert_accounts(
             code_hash:    NIL_DATA,
         }
         .encode()?;
-        mpt.insert(account.address.as_bytes(), &raw_account)?;
+        mpt.insert(account.address.as_bytes().to_vec(), raw_account.to_vec())?;
     }
     Ok(())
 }
